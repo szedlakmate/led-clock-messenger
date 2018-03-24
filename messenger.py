@@ -1,22 +1,12 @@
 """
-Documentation
-
-This program was written by Máté Szedlák (C) 2017 (mateszedlak@invenshure.com). All rights reserved.
+This program was written by Máté Szedlák (C) 2018 (szedlakmate@gmail.com). All rights reserved.
 
 Source:
-https://github.com/szedlakmate/vacation-management/
-
-Version: 1.0
-Created: 22-12-2017
+https://github.com/szedlakmate/led-clock-messenger/
 """
 
-#from datetime import timedelta
 import datetime
 from flask import Flask, url_for, redirect, render_template, jsonify, session, request
-#from flask_appconfig import AppConfig
-#from port import Messages  # Classes
-#from model import CreateDB, create_tables  # Functions
-#from port import db
 from sqlalchemy.exc import IntegrityError, OperationalError
 from flask_sqlalchemy import SQLAlchemy
 
@@ -29,7 +19,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Suggested by SQLAlchemy
 db = SQLAlchemy(app)
 
 
-# Calendar types model
+# Meggases types model
 class Messages(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.String(80), unique=False, nullable=False)
@@ -65,7 +55,6 @@ def index():
         print(type(message))
         message = ""
     else:
-        #send(message)
         print(message)
         try:
             msg = Messages(message=message, origin=origin)
@@ -74,23 +63,21 @@ def index():
             render_template("index.html", msg=message, is_sent= True if len(message)>0 else False)
         except KeyError:
             db.session.rollback()
-            #session.clear()
             rrender_template("index.html", msg="", is_sent= False)
         except IntegrityError:
             db.session.rollback()
-            #session.clear()
             render_template("index.html", msg="", is_sent= False)
         except:
             print('General exception')
             
     return render_template("index.html", msg=message, is_sent= True if len(message)>0 else False)
 
-# Landing page
+# Log page
 @app.route('/log', methods=['GET', 'POST'])
 def log():
     messages = Messages.query.order_by("id desc").all()
     return render_template("log.html", messages=messages)
  
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=False, port=5000)#, debug=DEBUG_FLASK, ssl_context=context)
-    
+    app.run(host="0.0.0.0", debug=False, port=5000) #, ssl_context=context)
+
