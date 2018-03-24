@@ -5,23 +5,18 @@ Source:
 https://github.com/szedlakmate/led-clock-messenger/
 """
 
-import sys
-import time
+# import sys
+# import time
 import datetime
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
-
-#import adafruit.adafruitgfx as adafruitgfx
-
+# import adafruit.adafruitgfx as adafruitgfx
 from Adafruit_LED_Backpack import Matrix8x8
-
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.sql import select, update, asc, desc
 
 engine = create_engine('mysql://root@localhost/messenger')
-
-
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = Matrix8x8.Matrix8x8()
@@ -36,8 +31,8 @@ digits = [
     [],
     []]
 
-
 display.set_brightness(1)
+
 
 def get_message():
     try:
@@ -57,8 +52,9 @@ def get_message():
             msg = ""
         return msg
     except:
-        #print("Unexpected error:", sys.exc_info()[0])
+        # print("Unexpected error:", sys.exc_info()[0])
         return ""
+
 
 # Infinite loop to drive the clock
 while True:
@@ -99,9 +95,8 @@ while True:
     draw = ImageDraw.Draw(image)
     draw.text((0,-2), time_to_show, fill=255)
     display.animate(display.horizontal_scroll(image), 0.12)
-  		
-    #time.sleep(0.1)
+
+    # time.sleep(0.1)
 
 # See the SSD1306 library for more examples of using the Python Imaging Library
 # such as drawing text: https://github.com/adafruit/Adafruit_Python_SSD1306
-

@@ -19,17 +19,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Suggested by SQLAlchemy
 db = SQLAlchemy(app)
 
 
-# Meggases types model
+# Messages types model
 class Messages(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.String(80), unique=False, nullable=False)
     shown = db.Column(db.Boolean, unique=False, nullable=False, default = False)
     sent = db.Column(db.DateTime, unique=False, nullable=False, default=datetime.datetime.utcnow)
     origin =db.Column(db.String(20), nullable=True)
+
     def __init__(self, message, origin):
         self.message = message
         self.shown = False
-        #self.sent = datetime.datetime.utcnow
+        # self.sent = datetime.datetime.utcnow
         if (origin):
             self.origin = origin
 
@@ -42,6 +43,7 @@ try:
 except IntegrityError:
     db.session.rollback()
 
+
 # Landing page
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -49,7 +51,7 @@ def index():
     if request.method == 'POST':
         message = request.form['message']
         origin = str(request.remote_addr)
-    #if request.method == 'GET':
+    # if request.method == 'GET':
     #    message = request.args.get("message")
     if type(message) !=  type("string"):
         print(type(message))
@@ -63,21 +65,22 @@ def index():
             render_template("index.html", msg=message, is_sent= True if len(message)>0 else False)
         except KeyError:
             db.session.rollback()
-            rrender_template("index.html", msg="", is_sent= False)
+            render_template("index.html", msg="", is_sent= False)
         except IntegrityError:
             db.session.rollback()
             render_template("index.html", msg="", is_sent= False)
         except:
             print('General exception')
             
-    return render_template("index.html", msg=message, is_sent= True if len(message)>0 else False)
+    return render_template("index.html", msg=message, is_sent= True if len(message) > 0 else False)
+
 
 # Log page
 @app.route('/log', methods=['GET', 'POST'])
 def log():
     messages = Messages.query.order_by("id desc").all()
     return render_template("log.html", messages=messages)
- 
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=False, port=5000) #, ssl_context=context)
-
