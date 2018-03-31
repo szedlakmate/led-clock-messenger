@@ -71,7 +71,7 @@ def index():
             render_template("index.html", msg="", is_sent= False)
         except:
             print('General exception')
-            
+
     return render_template("index.html", msg=message, is_sent= True if len(message) > 0 else False)
 
 
@@ -80,6 +80,14 @@ def index():
 def log():
     messages = Messages.query.order_by("id desc").all()
     return render_template("log.html", messages=messages)
+
+# Log page
+@app.route('/reset')
+def reset():
+    # messages = Messages.query.order_by("id desc").all()
+    raise ValueError('Represents a hidden bug, do not catch this')
+    raise Exception('I know Python!')
+    return redirect(url_for("index"))
 
 
 if __name__ == "__main__":
