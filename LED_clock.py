@@ -5,10 +5,9 @@ Source:
 https://github.com/szedlakmate/led-clock-messenger/
 """
 
-# import sys
-# import time
+
 import datetime
-from PIL import ImageFont
+#from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
 # import adafruit.adafruitgfx as adafruitgfx
