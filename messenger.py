@@ -16,6 +16,8 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost/messenger'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Suggested by SQLAlchemy
+app.config['SESSION_TYPE'] = 'memcached'
+app.config['SECRET_KEY'] = 'pSJz+u)zq*.9VN~t'
 db = SQLAlchemy(app)
 
 
@@ -45,49 +47,69 @@ except IntegrityError:
 
 
 # Landing page
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
-    message = ""
-    if request.method == 'POST':
-        message = request.form['message']
-        origin = str(request.remote_addr)
-    # if request.method == 'GET':
-    #    message = request.args.get("message")
-    if type(message) !=  type("string"):
+    print('GET')
+    is_sent = False
+    message = session.get('message')
+    session.clear()
+    if type(message) != type("string"):
+        message = ""
+    else:
+        is_sent = True
+    return render_template("index.html", msg=message, is_sent=is_sent)
+
+
+# Landing page
+@app.route('/', methods=['POST'])
+def index_POST():
+    print('POST')
+    message = request.form['message']
+    origin = str(request.remote_addr)
+    if type(message) != type("string"):
         print(type(message))
         message = ""
     else:
-        print(message)
+        print(message + ' (' + origin + ')')
         try:
             msg = Messages(message=message, origin=origin)
             db.session.add(msg)
             db.session.commit()
-            render_template("index.html", msg=message, is_sent= True if len(message)>0 else False)
+            session.clear()
+            session['message'] = message
+            return redirect(url_for('index'))
+            #render_template("index.html", msg=message, is_sent=True if len(message)>0 else False)
         except KeyError:
             db.session.rollback()
-            render_template("index.html", msg="", is_sent= False)
+            render_template("index.html", msg="", is_sent=False)
         except IntegrityError:
             db.session.rollback()
-            render_template("index.html", msg="", is_sent= False)
-        except:
-            print('General exception')
+            render_template("index.html", msg="", is_sent=False)
+        #except:
+        #    print('General exception')
 
-    return render_template("index.html", msg=message, is_sent= True if len(message) > 0 else False)
+    return render_template("index.html", msg="", is_sent=False)
 
 
 # Log page
-@app.route('/log', methods=['GET', 'POST'])
+@app.route('/log')
 def log():
     messages = Messages.query.order_by("id desc").all()
     return render_template("log.html", messages=messages)
 
-# Log page
-@app.route('/reset')
-def reset():
-    # messages = Messages.query.order_by("id desc").all()
-    raise ValueError('Represents a hidden bug, do not catch this')
-    raise Exception('I know Python!')
-    return redirect(url_for("index"))
+# Control panel page
+@app.route('/manage', methods=['GET', 'POST'])
+def manage():
+    action = ""
+    if request.method == 'POST':
+        sender_timestamp = request.form['timestamp']
+        origin = str(request.remote_addr)
+    # if request.method == 'GET':
+    #    message = request.args.get("message")
+    if type(action) !=  type("string"):
+        print(type(action))
+    #else:
+    return render_template("manage.html", action=action)
 
 
 if __name__ == "__main__":

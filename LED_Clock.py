@@ -43,7 +43,7 @@ def get_message():
         if type(item[0]) == type('A'):
             engine.execute("UPDATE messages SET shown=True WHERE ID =" + str(item[1]))
             msg = item[0]
-            print(msg)
+            #print(msg)
         else:
             msg = ""
             
