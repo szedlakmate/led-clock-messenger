@@ -17,7 +17,7 @@
 			<label for="message" style="font-size: 3em;">Message</label>
 			<input type="text" name= message class="form-control" id="message"  placeholder="Enter message (max 20 char)" maxlength="20" required  style="font-size: 2em; width: 70%;">
 		</div>
-		<button type="submit" class="btn btn-info" style="font-size: 2em;">Send</button>
+		<button type="submit" class="btn btn-info" style="font-size: 2em; margin: 5px;">Send</button>
 	</form>
 </div>
 
@@ -26,6 +26,9 @@
 	<strong style="font-size: 3em;">Message is sent: </strong><span style="font-style: italic;">{{ msg }}</span>
 </div>
 {% endif %}
+<div class="container">
+	<a href="/manage" type="submit" class="btn btn-warning" role="button" style="font-size: 1.2em; margin: 5px;">Manage</a>
+</div>
 
 	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

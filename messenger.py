@@ -50,7 +50,7 @@ except IntegrityError:
     db.session.rollback()
 
 
-def startprgm(command, delay=1):
+def startprgm(command, delay=0):
     try:
         time.sleep(delay)
         os.system(command)
@@ -131,20 +131,25 @@ def manage_POST():
                 session['action'] = 'Clock and Messenger have been restarted'
                 t = threading.Thread(
                     target=startprgm(
-                        "sudo -H python3 /home/pi/Projects/led-clock-messenger/restart.py"))
+                        "sudo -H python3 /home/pi/Projects/led-clock-messenger/restart.py", 0))
                 t.start()
-                #os.system("sudo -H python3 /home/pi/Projects/led-clock-messenger/restart.py")
                 return redirect(url_for('manage'))
             elif action == 'R-pi':
                 session.clear()
                 session['action'] = 'Raspberry has been restarted'
+                t = threading.Thread(
+                    target=startprgm(
+                        "sudo reboot", 5))
+                t.start()
                 return redirect(url_for('manage'))
-                os.system("sudo reboot")
             elif action == 'S-pi':
                 session.clear()
                 session['action'] = 'Raspberry has been shut down'
+                t = threading.Thread(
+                    target=startprgm(
+                        "sudo shutdown", 5))
+                t.start()
                 return redirect(url_for('manage'))
-                os.system("sudo shutdown")
         except:
             print('General exception')
 
