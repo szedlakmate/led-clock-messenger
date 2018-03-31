@@ -5,9 +5,13 @@ Source:
 https://github.com/szedlakmate/led-clock-messenger/
 """
 
+
+import os
+import threading
 import datetime
-from flask import Flask, url_for, redirect, render_template, jsonify, session, request
-from sqlalchemy.exc import IntegrityError, OperationalError
+import time
+from flask import Flask, url_for, redirect, render_template, session, request
+from sqlalchemy.exc import IntegrityError
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -46,10 +50,17 @@ except IntegrityError:
     db.session.rollback()
 
 
+def startprgm(command, delay=1):
+    try:
+        time.sleep(delay)
+        os.system(command)
+    except:
+        print("Restart exception")
+
+
 # Landing page
 @app.route('/', methods=['GET'])
 def index():
-    print('GET')
     is_sent = False
     message = session.get('message')
     session.clear()
@@ -60,15 +71,13 @@ def index():
     return render_template("index.html", msg=message, is_sent=is_sent)
 
 
-# Landing page
+# Landing page - POST message
 @app.route('/', methods=['POST'])
 def index_POST():
-    print('POST')
     message = request.form['message']
     origin = str(request.remote_addr)
     if type(message) != type("string"):
         print(type(message))
-        message = ""
     else:
         print(message + ' (' + origin + ')')
         try:
@@ -78,15 +87,14 @@ def index_POST():
             session.clear()
             session['message'] = message
             return redirect(url_for('index'))
-            #render_template("index.html", msg=message, is_sent=True if len(message)>0 else False)
         except KeyError:
             db.session.rollback()
             render_template("index.html", msg="", is_sent=False)
         except IntegrityError:
             db.session.rollback()
             render_template("index.html", msg="", is_sent=False)
-        #except:
-        #    print('General exception')
+        except:
+            print('General exception')
 
     return render_template("index.html", msg="", is_sent=False)
 
@@ -97,19 +105,50 @@ def log():
     messages = Messages.query.order_by("id desc").all()
     return render_template("log.html", messages=messages)
 
+
 # Control panel page
-@app.route('/manage', methods=['GET', 'POST'])
+@app.route('/manage', methods=['GET'])
 def manage():
-    action = ""
-    if request.method == 'POST':
-        sender_timestamp = request.form['timestamp']
-        origin = str(request.remote_addr)
-    # if request.method == 'GET':
-    #    message = request.args.get("message")
-    if type(action) !=  type("string"):
-        print(type(action))
-    #else:
+    action = session.get('action')
+    session.clear()
+    if type(action) != type("string"):
+        action = ""
     return render_template("manage.html", action=action)
+
+
+# Landing page - POST message
+@app.route('/manage', methods=['POST'])
+def manage_POST():
+    action = request.form['action']
+    origin = str(request.remote_addr)
+    if type(action) != type("string"):
+        print(type(action))
+    else:
+        print(action + ' (' + origin + ')')
+        try:
+            if action == 'R-clock':
+                session.clear()
+                session['action'] = 'Clock and Messenger have been restarted'
+                t = threading.Thread(
+                    target=startprgm(
+                        "sudo -H python3 /home/pi/Projects/led-clock-messenger/restart.py"))
+                t.start()
+                #os.system("sudo -H python3 /home/pi/Projects/led-clock-messenger/restart.py")
+                return redirect(url_for('manage'))
+            elif action == 'R-pi':
+                session.clear()
+                session['action'] = 'Raspberry has been restarted'
+                return redirect(url_for('manage'))
+                os.system("sudo reboot")
+            elif action == 'S-pi':
+                session.clear()
+                session['action'] = 'Raspberry has been shut down'
+                return redirect(url_for('manage'))
+                os.system("sudo shutdown")
+        except:
+            print('General exception')
+
+    return render_template("manage.html", action="")
 
 
 if __name__ == "__main__":
