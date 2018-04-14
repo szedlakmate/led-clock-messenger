@@ -2,33 +2,32 @@
 <html dir="ltr" loc="hu">
 <head>
 	<meta charset="utf-8">
-	<title>Messenger</title>
+	<title>Control Panel</title>
 
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
 </head>
 <body>
 	<div class="container-fluid">
-	<h1 style=" margin: auto; width: 90%; padding: 10px;">Write on the message board!</h1>
+	<h1 style=" margin: auto; width: 90%; padding: 10px;">Raspberry Pi 3B (SzL)</h1>
 </div>
 <div class="container">
 	<form method="POST">
 		<div class="form-group">
-			<label for="message" style="font-size: 3em;">Message</label>
-			<input type="text" name= message class="form-control" id="message"  placeholder="Enter message (max 20 char)" maxlength="20" required  style="font-size: 2em; width: 70%;">
+			<button type="submit" name="action" value="R-clock" class="btn btn-warning" style="font-size: 2em; margin: 5px;">Restart Clock</button>
+			<button type="submit" name="action" value="R-pi" class="btn btn-danger" style="font-size: 2em; margin: 5px;">Restart Raspberry</button>
+			<button type="submit" name="action" value="S-pi" class="btn btn-danger" style="font-size: 2em; margin: 5px;">Shutdown Raspberry</button>
+			<a href="/" type="submit" class="btn btn-info" role="button" style="font-size: 2em; margin: 5px;">Home</a>
 		</div>
-		<button type="submit" class="btn btn-info" style="font-size: 2em; margin: 5px;">Send</button>
+		<!--button type="submit" class="btn btn-info" style="font-size: 2em; margin: 5px">Send</button-->
 	</form>
 </div>
 
-{% if is_sent %}
+{% if action %}
 <div class="container"
-	<strong style="font-size: 3em;">Message is sent: </strong><span style="font-style: italic;">{{ msg }}</span>
+	<strong style="font-size: 3em;">{{ action }}</strong>
 </div>
 {% endif %}
-<div class="container">
-	<a href="/manage" type="submit" class="btn btn-warning" role="button" style="font-size: 1.2em; margin: 5px;">Manage</a>
-</div>
 
 	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

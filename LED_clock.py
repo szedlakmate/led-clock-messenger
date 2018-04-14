@@ -5,10 +5,9 @@ Source:
 https://github.com/szedlakmate/led-clock-messenger/
 """
 
-# import sys
-# import time
+
 import datetime
-from PIL import ImageFont
+#from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
 # import adafruit.adafruitgfx as adafruitgfx
@@ -43,7 +42,7 @@ def get_message():
         if type(item[0]) == type('A'):
             engine.execute("UPDATE messages SET shown=True WHERE ID =" + str(item[1]))
             msg = item[0]
-            print(msg)
+            #print(msg)
         else:
             msg = ""
             
@@ -55,9 +54,17 @@ def get_message():
         # print("Unexpected error:", sys.exc_info()[0])
         return ""
 
+def set_auto_brightness():
+    if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 20):
+        BRIGHTNESS = 15
+    else:
+        BRIGHTNESS = 1
+    display.set_brightness(BRIGHTNESS)
+
 
 # Infinite loop to drive the clock
 while True:
+    set_auto_brightness()
     now = datetime.datetime.now()
     
     message = get_message()
@@ -78,14 +85,14 @@ while True:
         display.clear()
         image = Image.new('1', (54, 8))
         draw = ImageDraw.Draw(image)
-        draw.text((0,-2),'Szeretlek', fill=255)
+        draw.text((0,-2), 'Szeretlek', fill=255)
         display.animate(display.horizontal_scroll(image), 0.12)
         
     if len(message) > 0:
         display.clear()
         image = Image.new('1', (len(message)*6+2, 8))
         draw = ImageDraw.Draw(image)
-        draw.text((0,-2), message, fill=255)
+        draw.text((0, -2), message, fill=255)
         display.animate(display.horizontal_scroll(image), 0.12)
     
     minute_to_show = str(now.minute) if now.minute >= 10 else '0' + str(now.minute)
@@ -93,7 +100,7 @@ while True:
     display.clear()
     image = Image.new('1', (30, 8))
     draw = ImageDraw.Draw(image)
-    draw.text((0,-2), time_to_show, fill=255)
+    draw.text((0, -2), time_to_show, fill=255)
     display.animate(display.horizontal_scroll(image), 0.12)
 
     # time.sleep(0.1)
