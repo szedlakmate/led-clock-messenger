@@ -15,6 +15,9 @@ from Adafruit_LED_Backpack import Matrix8x8
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.sql import select, update, asc, desc
 
+from weather import Weather, Unit
+
+
 engine = create_engine('mysql://root@localhost/messenger')
 
 # Create display instance on default I2C address (0x70) and bus number.
@@ -30,13 +33,20 @@ digits = [
     [],
     []]
 
-display.set_brightness(1)
+
+
+def weather(city):
+    weather = Weather(unit=Unit.CELSIUS)
+    location = weather.lookup_by_location(city)
+    condition = location.condition
+    return condition.temp + '°C'
+
 
 
 def get_message():
     try:
         meta = MetaData(engine)
-        messages = Table('messages', meta, autoload=True)  
+        messages = Table('messages', meta, autoload=True)
         sel = select([messages.c.message, messages.c.id]).where(messages.c.shown == False).order_by(asc(messages.c.sent)).limit(1)
         item = engine.execute(sel).first()
         if type(item[0]) == type('A'):
@@ -45,7 +55,7 @@ def get_message():
             #print(msg)
         else:
             msg = ""
-            
+
         if type(msg) != type(""):
             print(type(msg))
             msg = ""
@@ -66,7 +76,7 @@ def set_auto_brightness():
 while True:
     set_auto_brightness()
     now = datetime.datetime.now()
-    
+
     message = get_message()
     """
     if  now.second < -3:
@@ -81,20 +91,27 @@ while True:
     #else:
         #show_hour_skipthisloop = 3
     """
-    if now.minute % 5 == 0 and now.second < 7:
+    if now.minute % 1 == 0 and now.second < 5:
+        display.clear()
+        image = Image.new('1', (30, 8))
+        draw = ImageDraw.Draw(image)
+        draw.text((0,-2), weather('budapest'), fill=255)
+        display.animate(display.horizontal_scroll(image), 0.12)
+
+    if now.minute % 5 == 0 and now.second < 10:
         display.clear()
         image = Image.new('1', (54, 8))
         draw = ImageDraw.Draw(image)
         draw.text((0,-2), 'Szeretlek', fill=255)
         display.animate(display.horizontal_scroll(image), 0.12)
-        
+
     if len(message) > 0:
         display.clear()
         image = Image.new('1', (len(message)*6+2, 8))
         draw = ImageDraw.Draw(image)
         draw.text((0, -2), message, fill=255)
         display.animate(display.horizontal_scroll(image), 0.12)
-    
+
     minute_to_show = str(now.minute) if now.minute >= 10 else '0' + str(now.minute)
     time_to_show = str(now.hour) + ':' + minute_to_show
     display.clear()
