@@ -14,11 +14,9 @@ from PIL import ImageDraw
 from Adafruit_LED_Backpack import Matrix8x8
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.sql import select, update, asc, desc
-
 from weather import Weather, Unit
 
-
-engine = create_engine('mysql://root@localhost/messenger')
+engine = create_engine('mysql+pymysql://root@localhost/messenger')
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = Matrix8x8.Matrix8x8()
