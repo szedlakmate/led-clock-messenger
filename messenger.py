@@ -20,7 +20,7 @@ from flask_sqlalchemy import SQLAlchemy
 # Initialize web app
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost/messenger'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1311@localhost/messenger'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Suggested by SQLAlchemy
 app.config['SESSION_TYPE'] = 'memcached'
 app.config['SECRET_KEY'] = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10)) #'pSJz+u)zq*.9VN~t'
