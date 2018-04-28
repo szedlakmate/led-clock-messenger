@@ -18,11 +18,17 @@ from sqlalchemy.sql import select, update, asc, desc
 from weather import Weather, Unit
 
 
-def weather_api_request(city):
-    weather = Weather(unit=Unit.CELSIUS)
-    location = weather.lookup_by_location(city)
-    condition = location.condition
-    return condition
+def weather_api_request(loc_identifier, unit):
+    if unit.capitalize() == 'F':
+        weather = Weather(unit='f')
+    else:
+        weather = Weather(unit=Unit.CELSIUS)
+    if type(loc_identifier) == type('budapest'):
+        location = weather.lookup_by_location(loc_identifier)
+    elif type(loc_identifier) == type([47.4801247, 19.2519299]):
+        location = weather.lookup_by_latlng(loc_identifier[0], loc_identifier[1])
+
+    return location.condition
 
 
 def get_message(engine):
@@ -32,7 +38,7 @@ def get_message(engine):
             sel = select([messages.c.message, messages.c.id]).where(messages.c.shown == 0).order_by(
                 asc(messages.c.sent)).limit(1)
             item = engine.execute(sel).first()
-            if type(item[0]) == type('A'):
+            if item is not None and type(item[0]) == type('A'):
                 engine.execute("UPDATE messages SET shown=True WHERE ID =" + str(item[1]))
                 msg = item[0]
                 print(msg)
@@ -51,20 +57,20 @@ def get_message(engine):
 class Clock(object):
     def __init__(self):
         self.display = Matrix8x8.Matrix8x8()
-        self.prev_api_req_time = datetime.datetime.now()
-        self.condition = weather_api_request('budapest')
+        self.prev_api_req_time = datetime.datetime.now() - datetime.timedelta(minutes=60)
+        self.condition = weather_api_request([47.4794433, 19.2530735], 'c')
         self.engine = create_engine('mysql+pymysql://messenger:demopassword@localhost/messenger')
 
-    def weather(self, city):
+    def weather(self, location, unit='c', refresh_interval=20):
         current_api_req_time = datetime.datetime.now()
-        if current_api_req_time - self.prev_api_req_time >= datetime.timedelta(minutes=20):
+        if current_api_req_time - self.prev_api_req_time >= datetime.timedelta(minutes=refresh_interval):
             self.prev_api_req_time = current_api_req_time
             try:
-                self.condition = weather_api_request(city)
+                self.condition = weather_api_request(location, unit)
                 print('Weather updated')
             except:
-                print("Weather update API error", sys.exc_info())
-                return ""
+                print('Weather update API error: ', sys.exc_info())
+                return ''
 
         return self.condition.temp + '°C'
 
@@ -107,11 +113,11 @@ class Clock(object):
             #else:
                 #show_hour_skipthisloop = 3
             """
-            if now.minute % 1 == 0 or now.second < 5 or True:
+            if now.second < 5:
                 self.display.clear()
                 image = Image.new('1', (30, 8))
                 draw = ImageDraw.Draw(image)
-                draw.text((0, -2), self.weather('budapest'), fill=255)
+                draw.text((0, -2), self.weather([47.4801247, 19.2519299]), fill=255)
                 self.display.animate(self.display.horizontal_scroll(image), 0.12)
 
             if now.minute % 5 == 0 and now.second < 10:
@@ -135,11 +141,10 @@ class Clock(object):
             draw = ImageDraw.Draw(image)
             draw.text((0, -2), time_to_show, fill=255)
             self.display.animate(self.display.horizontal_scroll(image), 0.12)
-
             # time.sleep(0.1)
-
         # See the SSD1306 library for more examples of using the Python Imaging Library
         # such as drawing text: https://github.com/adafruit/Adafruit_Python_SSD1306
+
 
 CLOCK = Clock()
 CLOCK.start()
