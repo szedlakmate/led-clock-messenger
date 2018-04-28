@@ -36,7 +36,7 @@ except:
     print('Failed: kill watchdog')
 
 print('Start: Clock and Messenger')
-t = threading.Thread(target=startprgm("sudo -H nohup python3 /home/pi/startup.py >/dev/null &"))
+t = threading.Thread(target=startprgm("sudo -H nohup python3 /home/pi/Projects/led-clock-messenger/startup.py >/dev/null &"))
 t.start()
 
 

@@ -12,7 +12,7 @@ import time
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.sql import select, update, asc, desc
 
-engine = create_engine('mysql+pymysql://root:1311@localhost/messenger')
+engine = create_engine('mysql+pymysql://messenger:demopassword@localhost/messenger')
 
 
 def startprgm(cmd, delay=0):
