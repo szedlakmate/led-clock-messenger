@@ -20,7 +20,7 @@ from flask_sqlalchemy import SQLAlchemy
 # Initialize web app
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1311@localhost/messenger'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://messenger:demopassword@localhost/messenger'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Suggested by SQLAlchemy
 app.config['SESSION_TYPE'] = 'memcached'
 app.config['SECRET_KEY'] = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10)) #'pSJz+u)zq*.9VN~t'
@@ -44,6 +44,7 @@ class Messages(db.Model):
 
     def __repr__(self):
         return self.message
+
 
 # Messages types model
 class Commands(db.Model):
@@ -71,16 +72,16 @@ except IntegrityError:
 
 
 def schedule_command(command, origin):
-    #try:
+    try:
         cmd = Commands(command=command, origin=origin)
         db.session.add(cmd)
         db.session.commit()
-    #except KeyError:
-    #    db.session.rollback()
-    #except IntegrityError:
-    #    db.session.rollback()
-    #except:
-    #    print('General exception')
+    except KeyError:
+        db.session.rollback()
+    except IntegrityError:
+        db.session.rollback()
+    except:
+        print('General exception')
 
 
 # Landing page
