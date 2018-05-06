@@ -72,7 +72,7 @@ class Clock(object):
                 print('Weather update API error: ', sys.exc_info())
                 return ''
 
-        return self.condition.temp + '°C'
+        return 'T: ' + str(self.condition.temp) + '°C'
 
     def set_auto_brightness(self):
         if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 20):
