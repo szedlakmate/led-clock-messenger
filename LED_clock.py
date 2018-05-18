@@ -72,7 +72,8 @@ class Clock(object):
                 print('Weather update API error: ', sys.exc_info())
                 return ''
 
-        return self.condition.temp + '°C'
+        report = self.condition.temp + '°C'
+        return report
 
     def set_auto_brightness(self):
         if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 20):
@@ -99,40 +100,44 @@ class Clock(object):
             self.set_auto_brightness()
             now = datetime.datetime.now()
 
-            message = get_message(self.engine)
-            """
-            if  now.second < -3:
-                self.display.clear()
-                image = Image.new('1', (8, 8))
-                draw = ImageDraw.Draw(image)
-                draw.text((0,0), str(now.hour), fill=255)
-                self.display.set_image(image)
-                self.display.write_display()
-                time.sleep(3)
-                #show_hour_skipthisloop--
-            #else:
-                #show_hour_skipthisloop = 3
-            """
-            if now.second < 5:
-                self.display.clear()
-                image = Image.new('1', (30, 8))
-                draw = ImageDraw.Draw(image)
-                draw.text((0, -2), self.weather([47.4801247, 19.2519299]), fill=255)
-                self.display.animate(self.display.horizontal_scroll(image), 0.12)
+            try:
 
-            if now.minute % 5 == 0 and now.second < 10:
-                self.display.clear()
-                image = Image.new('1', (54, 8))
-                draw = ImageDraw.Draw(image)
-                draw.text((0, -2), 'Szeretlek', fill=255)
-                self.display.animate(self.display.horizontal_scroll(image), 0.12)
+                message = get_message(self.engine)
+                """
+                if  now.second < -3:
+                    self.display.clear()
+                    image = Image.new('1', (8, 8))
+                    draw = ImageDraw.Draw(image)
+                    draw.text((0,0), str(now.hour), fill=255)
+                    self.display.set_image(image)
+                    self.display.write_display()
+                    time.sleep(3)
+                    #show_hour_skipthisloop--
+                #else:
+                    #show_hour_skipthisloop = 3
+                """
+                if now.second < 5:
+                    self.display.clear()
+                    image = Image.new('1', (30, 8))
+                    draw = ImageDraw.Draw(image)
+                    draw.text((0, -2), self.weather([47.4801247, 19.2519299]), fill=255)
+                    self.display.animate(self.display.horizontal_scroll(image), 0.12)
 
-            if len(message) > 0:
-                self.display.clear()
-                image = Image.new('1', (len(message) * 6 + 2, 8))
-                draw = ImageDraw.Draw(image)
-                draw.text((0, -2), message, fill=255)
-                self.display.animate(self.display.horizontal_scroll(image), 0.12)
+                if now.minute % 5 == 0 and now.second < 10:
+                    self.display.clear()
+                    image = Image.new('1', (54, 8))
+                    draw = ImageDraw.Draw(image)
+                    draw.text((0, -2), 'Szeretlek', fill=255)
+                    self.display.animate(self.display.horizontal_scroll(image), 0.12)
+
+                if len(message) > 0:
+                    self.display.clear()
+                    image = Image.new('1', (len(message) * 6 + 2, 8))
+                    draw = ImageDraw.Draw(image)
+                    draw.text((0, -2), message, fill=255)
+                    self.display.animate(self.display.horizontal_scroll(image), 0.12)
+            except Exception:
+                print('Error: extras cannot be processed.')
 
             minute_to_show = str(now.minute) if now.minute >= 10 else '0' + str(now.minute)
             time_to_show = str(now.hour) + ':' + minute_to_show
