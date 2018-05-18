@@ -87,7 +87,7 @@ class HT16K33(object):
             # Turn off the specified LED (set bit to zero).
             self.buffer[pos] &= ~(1 << offset)
         else:
-            # Turn on the speciried LED (set bit to one).
+            # Turn on the specified LED (set bit to one).
             self.buffer[pos] |= (1 << offset)
 
     def write_display(self):
