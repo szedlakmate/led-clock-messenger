@@ -7,6 +7,7 @@ https://github.com/szedlakmate/led-clock-messenger/
 
 
 import datetime
+import time
 import sys
 #from PIL import ImageFont
 from PIL import Image
@@ -56,7 +57,9 @@ def get_message(engine):
 
 class Clock(object):
     def __init__(self):
-        self.display = Matrix8x8.Matrix8x8()
+        self.displays = [Matrix8x8.Matrix8x8(address=0x70), Matrix8x8.Matrix8x8(address=0x74),
+                         Matrix8x8.Matrix8x8(address=0x72), Matrix8x8.Matrix8x8(address=0x71)]
+
         self.prev_api_req_time = datetime.datetime.now() - datetime.timedelta(minutes=60)
         self.condition = weather_api_request([47.4794433, 19.2530735], 'c')
         self.engine = create_engine('mysql+pymysql://messenger:demopassword@localhost/messenger')
@@ -77,30 +80,54 @@ class Clock(object):
 
     def set_auto_brightness(self):
         if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 20):
-            BRIGHTNESS = 15
+            BRIGHTNESS = 7
         else:
             BRIGHTNESS = 1
-        self.display.set_brightness(BRIGHTNESS)
 
-    def start(self):
-        # Create display instance on default I2C address (0x70) and bus number.
+        for index, display in enumerate(self.displays):
+            if index > 1:
+                BRIGHTNESS += 8
+            display.set_brightness(min(max(BRIGHTNESS, 0), 15))
 
-        # Alternatively, create a display with a specific I2C address and/or bus.
-        # display = Matrix8x8.Matrix8x8(address=0x74, busnum=1)
+    def multi_draw(self, images):
+        for i in range(len(self.displays)):
+            self.displays[i].set_image(images[i*8+8].rotate(270))
+            # self.displays[i].set_image(images[8].rotate(270))
+            # Draw the buffer to the display hardware
+            self.displays[i].write_display()
 
-        # Initialize the display. Must be called once before using the display.
-        self.display.begin()
+    def multi_animate(self, images, delay=.25):
+        """Displays each of the input images in order, pausing for "delay"
+        seconds after each image.
 
-        digits = [
-            [],
-            []]
+        Keyword arguments:
+        image -- An iterable collection of Image objects.
+        delay -- How many seconds to wait after displaying an image before
+            displaying the next one. (Default = .25)
+        """
+        canvas = [Image.new('1', (8, 8))] * ((len(self.displays) - 1) * 8)
 
+        for image in images:
+            canvas.append(image)
+
+        for i in range((len(self.displays) - 1) * 8):
+            canvas.append(Image.new('1', (8, 8)))
+
+        for i in range(len(canvas) - ((len(self.displays) - 1) * 8)):
+            # Draw the image on the display buffer.
+            multi_image = [canvas[i], canvas[i + 8], canvas[i + 8 * 2], canvas[i + 8 * 3]]
+            for (display, index) in enumerate(self.displays):
+                display.set_image(multi_image[index].rotate(270))
+                # Draw the buffer to the display hardware.
+                display.write_display()
+            time.sleep(delay)
+
+    def write_loop(self):
         # Infinite loop to drive the clock
         while True:
-            self.set_auto_brightness()
-            now = datetime.datetime.now()
-
-            try:
+            #try:
+                self.set_auto_brightness()
+                now = datetime.datetime.now()
 
                 message = get_message(self.engine)
                 """
@@ -116,39 +143,53 @@ class Clock(object):
                 #else:
                     #show_hour_skipthisloop = 3
                 """
-                if now.second < 5:
-                    self.display.clear()
+                if now.second < 8*0:
                     image = Image.new('1', (30, 8))
                     draw = ImageDraw.Draw(image)
                     draw.text((0, -2), self.weather([47.4801247, 19.2519299]), fill=255)
-                    self.display.animate(self.display.horizontal_scroll(image), 0.12)
+                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.12)
 
-                if now.minute % 5 == 0 and now.second < 10:
-                    self.display.clear()
+                if now.minute % 5 == 0 and now.second < 14*0:
                     image = Image.new('1', (54, 8))
                     draw = ImageDraw.Draw(image)
                     draw.text((0, -2), 'Szeretlek', fill=255)
-                    self.display.animate(self.display.horizontal_scroll(image), 0.12)
+                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.12)
 
                 if len(message) > 0:
-                    self.display.clear()
                     image = Image.new('1', (len(message) * 6 + 2, 8))
                     draw = ImageDraw.Draw(image)
                     draw.text((0, -2), message, fill=255)
-                    self.display.animate(self.display.horizontal_scroll(image), 0.12)
-            except Exception:
-                print('Error: extras cannot be processed.')
+                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.12)
 
-            minute_to_show = str(now.minute) if now.minute >= 10 else '0' + str(now.minute)
-            time_to_show = str(now.hour) + ':' + minute_to_show
-            self.display.clear()
-            image = Image.new('1', (30, 8))
-            draw = ImageDraw.Draw(image)
-            draw.text((0, -2), time_to_show, fill=255)
-            self.display.animate(self.display.horizontal_scroll(image), 0.12)
-            # time.sleep(0.1)
-        # See the SSD1306 library for more examples of using the Python Imaging Library
-        # such as drawing text: https://github.com/adafruit/Adafruit_Python_SSD1306
+
+                minute_to_show = str(now.minute) if now.minute >= 10 else '0' + str(now.minute)
+                hour_to_show = str(now.hour) if now.hour >= 10 else '0' + str(now.hour)
+                time_to_show = hour_to_show + ':' + minute_to_show
+                # self.multi_clear()
+                image = Image.new('1', (30, 8))
+                draw = ImageDraw.Draw(image)
+                draw.text((0, -1), time_to_show, fill=255)
+                self.multi_draw(self.displays[0].horizontal_scroll(image))
+                time.sleep(0.5)
+                # See the SSD1306 library for more examples of using the Python Imaging Library
+                # such as drawing text: https://github.com/adafruit/Adafruit_Python_SSD1306
+            #except Exception:
+                pass
+                #print(str(time.time()) + 'Error: Print failure')
+
+    def start(self):
+        # Create display instance on default I2C address (0x70) and bus number.
+
+        # Alternatively, create a display with a specific I2C address and/or bus.
+        # display = Matrix8x8.Matrix8x8(address=0x74, busnum=1)
+
+        # Initialize the display. Must be called once before using the display.
+        for display in self.displays:
+            display.begin()
+        digits = [
+            [],
+            []]
+        self.write_loop()
 
 
 CLOCK = Clock()

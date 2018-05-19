@@ -54,7 +54,7 @@ class HT16K33(object):
         # Turn display on with no blinking.
         self.set_blink(HT16K33_BLINK_OFF)
         # Set display to full brightness.
-        self.set_brightness(15)
+        self.set_brightness(1)
 
     def set_blink(self, frequency):
         """Blink display at specified frequency.  Note that frequency must be a
@@ -87,7 +87,7 @@ class HT16K33(object):
             # Turn off the specified LED (set bit to zero).
             self.buffer[pos] &= ~(1 << offset)
         else:
-            # Turn on the speciried LED (set bit to one).
+            # Turn on the specified LED (set bit to one).
             self.buffer[pos] |= (1 << offset)
 
     def write_display(self):
