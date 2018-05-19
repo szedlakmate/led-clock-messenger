@@ -80,11 +80,13 @@ class Clock(object):
 
     def set_auto_brightness(self):
         if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 20):
-            BRIGHTNESS = 10
+            BRIGHTNESS = 7
         else:
             BRIGHTNESS = 1
 
-        for display in self.displays:
+        for index, display in enumerate(self.displays):
+            if index > 1:
+                BRIGHTNESS += 8
             display.set_brightness(min(max(BRIGHTNESS, 0), 15))
 
     def multi_draw(self, images):
@@ -166,7 +168,7 @@ class Clock(object):
                 # self.multi_clear()
                 image = Image.new('1', (30, 8))
                 draw = ImageDraw.Draw(image)
-                draw.text((0, -2), time_to_show, fill=255)
+                draw.text((0, -1), time_to_show, fill=255)
                 self.multi_draw(self.displays[0].horizontal_scroll(image))
                 time.sleep(0.5)
                 # See the SSD1306 library for more examples of using the Python Imaging Library
