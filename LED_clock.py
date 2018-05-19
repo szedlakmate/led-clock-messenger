@@ -57,7 +57,9 @@ def get_message(engine):
 
 class Clock(object):
     def __init__(self):
-        self.displays = [Matrix8x8.Matrix8x8(address=0x74), Matrix8x8.Matrix8x8(address=0x72), Matrix8x8.Matrix8x8(address=0x70)]
+        self.displays = [Matrix8x8.Matrix8x8(address=0x70), Matrix8x8.Matrix8x8(address=0x74),
+                         Matrix8x8.Matrix8x8(address=0x72), Matrix8x8.Matrix8x8(address=0x71)]
+
         self.prev_api_req_time = datetime.datetime.now() - datetime.timedelta(minutes=60)
         self.condition = weather_api_request([47.4794433, 19.2530735], 'c')
         self.engine = create_engine('mysql+pymysql://messenger:demopassword@localhost/messenger')
@@ -78,15 +80,17 @@ class Clock(object):
 
     def set_auto_brightness(self):
         if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 20):
-            BRIGHTNESS = 15
+            BRIGHTNESS = 10
         else:
             BRIGHTNESS = 1
-        for i in range(3):
-            self.displays[i].set_brightness(BRIGHTNESS)
+
+        for display in self.displays:
+            display.set_brightness(min(max(BRIGHTNESS, 0), 15))
 
     def multi_draw(self, images):
-        for i in range(3):
+        for i in range(len(self.displays)):
             self.displays[i].set_image(images[i*8+8].rotate(270))
+            # self.displays[i].set_image(images[8].rotate(270))
             # Draw the buffer to the display hardware
             self.displays[i].write_display()
 
@@ -99,21 +103,21 @@ class Clock(object):
         delay -- How many seconds to wait after displaying an image before
             displaying the next one. (Default = .25)
         """
-        canvas = [Image.new('1', (8, 8))] * 16
+        canvas = [Image.new('1', (8, 8))] * ((len(self.displays) - 1) * 8)
 
         for image in images:
             canvas.append(image)
 
-        for i in range(16):
+        for i in range((len(self.displays) - 1) * 8):
             canvas.append(Image.new('1', (8, 8)))
 
-        for i in range(len(canvas) - 16):
+        for i in range(len(canvas) - ((len(self.displays) - 1) * 8)):
             # Draw the image on the display buffer.
-            multi_image = [canvas[i], canvas[i + 8], canvas[i + 8 * 2]]
-            for i in range(3):
-                self.displays[i].set_image(multi_image[i].rotate(270))
+            multi_image = [canvas[i], canvas[i + 8], canvas[i + 8 * 2], canvas[i + 8 * 3]]
+            for (display, index) in enumerate(self.displays):
+                display.set_image(multi_image[index].rotate(270))
                 # Draw the buffer to the display hardware.
-                self.displays[i].write_display()
+                display.write_display()
             time.sleep(delay)
 
     def write_loop(self):
@@ -137,13 +141,13 @@ class Clock(object):
                 #else:
                     #show_hour_skipthisloop = 3
                 """
-                if now.second < 8:
+                if now.second < 8*0:
                     image = Image.new('1', (30, 8))
                     draw = ImageDraw.Draw(image)
                     draw.text((0, -2), self.weather([47.4801247, 19.2519299]), fill=255)
                     self.multi_animate(self.displays[0].horizontal_scroll(image), 0.12)
 
-                if now.minute % 5 == 0 and now.second < 14:
+                if now.minute % 5 == 0 and now.second < 14*0:
                     image = Image.new('1', (54, 8))
                     draw = ImageDraw.Draw(image)
                     draw.text((0, -2), 'Szeretlek', fill=255)
@@ -157,7 +161,8 @@ class Clock(object):
 
 
                 minute_to_show = str(now.minute) if now.minute >= 10 else '0' + str(now.minute)
-                time_to_show = str(now.hour) + minute_to_show
+                hour_to_show = str(now.hour) if now.hour >= 10 else '0' + str(now.hour)
+                time_to_show = hour_to_show + ':' + minute_to_show
                 # self.multi_clear()
                 image = Image.new('1', (30, 8))
                 draw = ImageDraw.Draw(image)
@@ -177,13 +182,13 @@ class Clock(object):
         # display = Matrix8x8.Matrix8x8(address=0x74, busnum=1)
 
         # Initialize the display. Must be called once before using the display.
-        for i in range(3):
-            self.displays[i].begin()
-
+        for display in self.displays:
+            display.begin()
         digits = [
             [],
             []]
         self.write_loop()
+
 
 CLOCK = Clock()
 CLOCK.start()
