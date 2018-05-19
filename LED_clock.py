@@ -86,7 +86,10 @@ class Clock(object):
 
         for index, display in enumerate(self.displays):
             if index > 1:
-                BRIGHTNESS += 8
+                if BRIGHTNESS >= 7:
+                    BRIGHTNESS += 8
+                else:
+                    BRIGHTNESS += 3
             display.set_brightness(min(max(BRIGHTNESS, 0), 15))
 
     def multi_draw(self, images):
@@ -186,9 +189,6 @@ class Clock(object):
         # Initialize the display. Must be called once before using the display.
         for display in self.displays:
             display.begin()
-        digits = [
-            [],
-            []]
         self.write_loop()
 
 
