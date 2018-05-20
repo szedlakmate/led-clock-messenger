@@ -59,7 +59,7 @@ class Clock(object):
     def __init__(self):
         self.displays = [Matrix8x8.Matrix8x8(address=0x70), Matrix8x8.Matrix8x8(address=0x74),
                          Matrix8x8.Matrix8x8(address=0x72), Matrix8x8.Matrix8x8(address=0x71)]
-
+        self.second_blink = True
         self.prev_api_req_time = datetime.datetime.now() - datetime.timedelta(minutes=60)
         self.condition = weather_api_request([47.4794433, 19.2530735], 'c')
         self.engine = create_engine('mysql+pymysql://messenger:demopassword@localhost/messenger')
@@ -75,7 +75,11 @@ class Clock(object):
                 print('Weather update API error: ', sys.exc_info())
                 return ''
 
-        report = self.condition.temp + '°C'
+        prefix = ''
+        if int(self.condition.temp) >= 0:
+            prefix = ' '
+
+        report = str(prefix) + str(self.condition.temp) + '°C'
         return report
 
     def set_auto_brightness(self):
@@ -119,7 +123,7 @@ class Clock(object):
         for i in range(len(canvas) - ((len(self.displays) - 1) * 8)):
             # Draw the image on the display buffer.
             multi_image = [canvas[i], canvas[i + 8], canvas[i + 8 * 2], canvas[i + 8 * 3]]
-            for (display, index) in enumerate(self.displays):
+            for (index, display) in enumerate(self.displays):
                 display.set_image(multi_image[index].rotate(270))
                 # Draw the buffer to the display hardware.
                 display.write_display()
@@ -128,57 +132,56 @@ class Clock(object):
     def write_loop(self):
         # Infinite loop to drive the clock
         while True:
-            #try:
+            try:
                 self.set_auto_brightness()
                 now = datetime.datetime.now()
 
                 message = get_message(self.engine)
-                """
-                if  now.second < -3:
-                    self.display.clear()
-                    image = Image.new('1', (8, 8))
-                    draw = ImageDraw.Draw(image)
-                    draw.text((0,0), str(now.hour), fill=255)
-                    self.display.set_image(image)
-                    self.display.write_display()
-                    time.sleep(3)
-                    #show_hour_skipthisloop--
-                #else:
-                    #show_hour_skipthisloop = 3
-                """
-                if now.second < 8*0:
-                    image = Image.new('1', (30, 8))
-                    draw = ImageDraw.Draw(image)
-                    draw.text((0, -2), self.weather([47.4801247, 19.2519299]), fill=255)
-                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.12)
 
-                if now.minute % 5 == 0 and now.second < 14*0:
+                if now.minute % 5 == 0 and now.second < 8:
                     image = Image.new('1', (54, 8))
                     draw = ImageDraw.Draw(image)
-                    draw.text((0, -2), 'Szeretlek', fill=255)
-                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.12)
+                    draw.text((0, -1), 'Szeretlek', fill=255)
+                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.08)
+
+                #if now.minute % 10 == 0 and now.second < 14:
+                    image = Image.new('1', (30, 8))
+                    draw = ImageDraw.Draw(image)
+                    draw.text((0, -1), self.weather([47.4801247, 19.2519299]), fill=255)
+                    self.multi_draw(self.displays[0].horizontal_scroll(image))
+                    time.sleep(5.0)
 
                 if len(message) > 0:
                     image = Image.new('1', (len(message) * 6 + 2, 8))
                     draw = ImageDraw.Draw(image)
-                    draw.text((0, -2), message, fill=255)
-                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.12)
-
+                    draw.text((0, -1), message, fill=255)
+                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.08)
 
                 minute_to_show = str(now.minute) if now.minute >= 10 else '0' + str(now.minute)
                 hour_to_show = str(now.hour) if now.hour >= 10 else '0' + str(now.hour)
-                time_to_show = hour_to_show + ':' + minute_to_show
+                self.second_blink = not self.second_blink
+                if self.second_blink:
+                    second_divider = ' '
+                else:
+                    second_divider = ':'
+
+                time_to_show = hour_to_show + second_divider + minute_to_show
+                # TODO: multi_clear()
                 # self.multi_clear()
-                image = Image.new('1', (30, 8))
+                image = Image.new('1', (36, 8))
                 draw = ImageDraw.Draw(image)
-                draw.text((0, -1), time_to_show, fill=255)
+                draw.text((1, -1), time_to_show, fill=255)
                 self.multi_draw(self.displays[0].horizontal_scroll(image))
-                time.sleep(0.5)
+                time.sleep(1)
                 # See the SSD1306 library for more examples of using the Python Imaging Library
                 # such as drawing text: https://github.com/adafruit/Adafruit_Python_SSD1306
-            #except Exception:
-                pass
-                #print(str(time.time()) + 'Error: Print failure')
+            except Exception:
+                print('Error: Print failure. Re-initializing displays')
+                try:
+                    for display in self.displays:
+                        display.begin()
+                except Exception:
+                    print('Restart failed')
 
     def start(self):
         # Create display instance on default I2C address (0x70) and bus number.
