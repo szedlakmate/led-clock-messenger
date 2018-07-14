@@ -1,10 +1,4 @@
-"""
-This program was written by Máté Szedlák (C) 2018 (szedlakmate@gmail.com). All rights reserved.
-
-Source:
-https://github.com/szedlakmate/led-clock-messenger/
-"""
-
+# -*- coding: utf-8 -*-
 
 import os
 import threading
@@ -20,7 +14,7 @@ from flask_sqlalchemy import SQLAlchemy
 # Initialize web app
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://messenger:demopassword@localhost/messenger'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://messenger:demopassword@localhost/Messenger'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Suggested by SQLAlchemy
 app.config['SESSION_TYPE'] = 'memcached'
 app.config['SECRET_KEY'] = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10)) #'pSJz+u)zq*.9VN~t'
@@ -196,4 +190,5 @@ def manage_POST():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=False, port=5000) #, ssl_context=context)
+    # context = ('./self.messenger.crt', './self.messenger.key')
+    app.run(host="0.0.0.0", port=5000, debug=False) #, ssl_context=context)

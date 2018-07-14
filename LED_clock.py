@@ -1,10 +1,4 @@
-"""
-This program was written by Máté Szedlák (C) 2018 (szedlakmate@gmail.com). All rights reserved.
-
-Source:
-https://github.com/szedlakmate/led-clock-messenger/
-"""
-
+# -*- coding: utf-8 -*-
 
 import datetime
 import time
@@ -57,12 +51,12 @@ def get_message(engine):
 
 class Clock(object):
     def __init__(self):
-        self.displays = [Matrix8x8.Matrix8x8(address=0x70), Matrix8x8.Matrix8x8(address=0x74),
-                         Matrix8x8.Matrix8x8(address=0x72), Matrix8x8.Matrix8x8(address=0x71)]
+        self.displays = [Matrix8x8.Matrix8x8(address=0x70), Matrix8x8.Matrix8x8(address=0x71),
+                         Matrix8x8.Matrix8x8(address=0x74), Matrix8x8.Matrix8x8(address=0x75)]
         self.second_blink = True
         self.prev_api_req_time = datetime.datetime.now() - datetime.timedelta(minutes=60)
         self.condition = weather_api_request([47.4794433, 19.2530735], 'c')
-        self.engine = create_engine('mysql+pymysql://messenger:demopassword@localhost/messenger')
+        self.engine = create_engine('mysql+pymysql://messenger:demopassword@localhost/Messenger')
 
     def weather(self, location, unit='c', refresh_interval=20):
         current_api_req_time = datetime.datetime.now()
@@ -138,7 +132,7 @@ class Clock(object):
 
                 message = get_message(self.engine)
 
-                if now.minute % 5 == 0 and now.second < 8:
+                if now.minute % 10 == 0 and now.second < 8:
                     image = Image.new('1', (54, 8))
                     draw = ImageDraw.Draw(image)
                     draw.text((0, -1), 'Szeretlek', fill=255)
