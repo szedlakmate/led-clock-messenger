@@ -1,0 +1,58 @@
+
+class ConditionName(object):
+
+    def name(code):
+
+        condition_text = {
+            '0': 'tornádo',
+            '1': 'trópusi vihar',
+            '2': 'hurrikán',
+            '3': 'severe thunderstorms',
+            '4': 'thunderstorms',
+            '5': 'havaseső',
+            '6': 'mixed rain and sleet',
+            '7': 'mixed snow and sleet',
+            '8': 'ónos eső',
+            '9': 'drizzle',
+            '10': 'freezing rain',
+            '11': 'showers',
+            '12': 'showers',
+            '13': 'snow flurries',
+            '14': 'light snow showers',
+            '15': 'blowing snow',
+            '16': 'havazás',
+            '17': 'hail',
+            '18': 'sleet',
+            '19': 'dust',
+            '20': 'köd',
+            '21': 'haze',
+            '22': 'smoky',
+            '23': 'blustery',
+            '24': 'szél',
+            '25': 'cold',
+            '26': 'felhős',
+            '27': 'felhős éjjel',
+            '28': 'felhős',
+            '29': 'részben felhős éj',
+            '30': 'részben felhős',
+            '31': 'tiszta éj',
+            '32': 'napos',
+            '33': 'tiszta éj',
+            '34': 'tiszta',
+            '35': 'mixed rain and hail',
+            '36': 'csuda meleg',
+            '37': 'isolated thunderstorms',
+            '38': 'scattered thunderstorms',
+            '39': 'scattered thunderstorms',
+            '40': 'scattered showers',
+            '41': 'heavy snow',
+            '42': 'scattered snow showers',
+            '43': 'sok hó',
+            '44': 'partly cloudy',
+            '45': 'thundershowers',
+            '46': 'snow showers',
+            '47': 'isolated thundershowers',
+            '3200': 'not availabl'
+        }
+
+        return condition_text[code]

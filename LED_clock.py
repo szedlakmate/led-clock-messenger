@@ -11,6 +11,7 @@ from Adafruit_LED_Backpack import Matrix8x8
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.sql import select, update, asc, desc
 from weather import Weather, Unit
+from weather_conditions import ConditionName
 
 
 def weather_api_request(loc_identifier, unit):
@@ -22,8 +23,9 @@ def weather_api_request(loc_identifier, unit):
         location = weather.lookup_by_location(loc_identifier)
     elif type(loc_identifier) == type([47.4801247, 19.2519299]):
         location = weather.lookup_by_latlng(loc_identifier[0], loc_identifier[1])
+        return location
 
-    return location.condition
+    return False
 
 
 def get_message(engine):
@@ -56,14 +58,16 @@ class Clock(object):
         self.second_blink = True
         self.prev_api_req_time = datetime.datetime.now() - datetime.timedelta(minutes=60)
         self.condition = weather_api_request([47.4794433, 19.2530735], 'c')
+        self.location = 0
         self.engine = create_engine('mysql+pymysql://messenger:demopassword@localhost/Messenger')
 
-    def weather(self, location, unit='c', refresh_interval=20):
+    def weather(self, location_name, unit='c', refresh_interval=20):
         current_api_req_time = datetime.datetime.now()
         if current_api_req_time - self.prev_api_req_time >= datetime.timedelta(minutes=refresh_interval):
             self.prev_api_req_time = current_api_req_time
             try:
-                self.condition = weather_api_request(location, unit)
+                self.location = weather_api_request(location_name, unit)
+                self.condition = self.location.condition
                 print('Weather updated')
             except:
                 print('Weather update API error: ', sys.exc_info())
@@ -74,7 +78,9 @@ class Clock(object):
             prefix = ' '
 
         report = str(prefix) + str(self.condition.temp) + '°C'
-        return report
+
+        weather_show = [report, '>> ' + self.location.forecast[0].text]
+        return weather_show
 
     def set_auto_brightness(self):
         if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 20):
@@ -138,12 +144,18 @@ class Clock(object):
                     draw.text((0, -1), 'Szeretlek', fill=255)
                     self.multi_animate(self.displays[0].horizontal_scroll(image), 0.08)
 
-                #if now.minute % 10 == 0 and now.second < 14:
+                if now.minute % 1 == 0 and now.second < 140:
                     image = Image.new('1', (30, 8))
                     draw = ImageDraw.Draw(image)
-                    draw.text((0, -1), self.weather([47.4801247, 19.2519299]), fill=255)
+                    weather = self.weather([47.4801247, 19.2519299])
+                    draw.text((0, -1), weather[0], fill=255)
                     self.multi_draw(self.displays[0].horizontal_scroll(image))
                     time.sleep(5.0)
+
+                    image = Image.new('1', (54, 8))
+                    draw = ImageDraw.Draw(image)
+                    draw.text((0, -1), weather[1], fill=255)
+                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.08)
 
                 if len(message) > 0:
                     image = Image.new('1', (len(message) * 6 + 2, 8))
