@@ -79,7 +79,7 @@ class Clock(object):
 
         report = str(prefix) + str(self.condition.temp) + '°C'
 
-        weather_show = [report, '>> ' + self.location.forecast[0].text]
+        weather_show = [report, '>> ' + ConditionName.name(self.location.forecast[0].code)]
         return weather_show
 
     def set_auto_brightness(self):
@@ -144,7 +144,7 @@ class Clock(object):
                     draw.text((0, -1), 'Szeretlek', fill=255)
                     self.multi_animate(self.displays[0].horizontal_scroll(image), 0.08)
 
-                if now.minute % 1 == 0 and now.second < 140:
+                if now.minute % 10 == 0 and now.second < 14:
                     image = Image.new('1', (30, 8))
                     draw = ImageDraw.Draw(image)
                     weather = self.weather([47.4801247, 19.2519299])
