@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import time
 import sys
-#from PIL import ImageFont
+import time
+# from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
-# import adafruit.adafruitgfx as adafruitgfx
-from Adafruit_LED_Backpack import Matrix8x8
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.sql import select, update, asc, desc
 from weather import Weather, Unit
+
+# import adafruit.adafruitgfx as adafruitgfx
+from Adafruit_LED_Backpack import Matrix8x8
 from weather_conditions import ConditionName
 
 
@@ -29,32 +30,31 @@ def weather_api_request(loc_identifier, unit):
 
 
 def get_message(engine):
-        try:
-            meta = MetaData(engine)
-            messages = Table('messages', meta, autoload=True)
-            sel = select([messages.c.message, messages.c.id]).where(messages.c.shown == 0).order_by(
-                asc(messages.c.sent)).limit(1)
-            item = engine.execute(sel).first()
-            if item is not None and type(item[0]) == type('A'):
-                engine.execute("UPDATE messages SET shown=True WHERE ID =" + str(item[1]))
-                msg = item[0]
-                print(msg)
-            else:
-                msg = ""
+    try:
+        meta = MetaData(engine)
+        messages = Table('messages', meta, autoload=True)
+        sel = select([messages.c.message, messages.c.id]).where(messages.c.shown == 0).order_by(
+            asc(messages.c.sent)).limit(1)
+        item = engine.execute(sel).first()
+        if item is not None and type(item[0]) == type('A'):
+            engine.execute("UPDATE messages SET shown=True WHERE ID =" + str(item[1]))
+            msg = item[0]
+            print(msg)
+        else:
+            msg = ""
 
-            if type(msg) != type(""):
-                print(type(msg))
-                msg = ""
-            return msg
-        except:
-            print("Unexpected error:", sys.exc_info())
-            return ""
+        if type(msg) != type(""):
+            print(type(msg))
+            msg = ""
+        return msg
+    except:
+        print("Unexpected error:", sys.exc_info())
+        return ""
 
 
 class Clock(object):
     def __init__(self):
-        self.displays = [Matrix8x8.Matrix8x8(address=0x70), Matrix8x8.Matrix8x8(address=0x71),
-                         Matrix8x8.Matrix8x8(address=0x74), Matrix8x8.Matrix8x8(address=0x75)]
+        self.displays = [Matrix8x8.Matrix8x8(address=0x70), Matrix8x8.Matrix8x8(address=0x71)]
         self.second_blink = True
         self.prev_api_req_time = datetime.datetime.now() - datetime.timedelta(minutes=60)
         self.condition = weather_api_request([47.4794433, 19.2530735], 'c')
@@ -71,7 +71,7 @@ class Clock(object):
                 print('Weather updated')
             except:
                 print('Weather update API error: ', sys.exc_info())
-                return ''
+                return ['ejnye', 'no net']
 
         prefix = ''
         if int(self.condition.temp) >= 0:
@@ -79,11 +79,11 @@ class Clock(object):
 
         report = str(prefix) + str(self.condition.temp) + '°C'
 
-        weather_show = [report, '>> ' + ConditionName.name(self.location.forecast[0].code)]
+        weather_show = [report, '>> ' + ConditionName.name(self.location.condition.code) + ' <<']
         return weather_show
 
     def set_auto_brightness(self):
-        if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 20):
+        if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 18):
             BRIGHTNESS = 7
         else:
             BRIGHTNESS = 1
@@ -103,7 +103,7 @@ class Clock(object):
             # Draw the buffer to the display hardware
             self.displays[i].write_display()
 
-    def multi_animate(self, images, delay=.25):
+    def multi_animate(self, images, delay=.25, delta=[0, 0]):
         """Displays each of the input images in order, pausing for "delay"
         seconds after each image.
 
@@ -112,17 +112,18 @@ class Clock(object):
         delay -- How many seconds to wait after displaying an image before
             displaying the next one. (Default = .25)
         """
-        canvas = [Image.new('1', (8, 8))] * ((len(self.displays) - 1) * 8)
+        canvas = [Image.new('1', (8, 8))] * ((len(self.displays) - 1) * 8 - delta[0])
 
         for image in images:
             canvas.append(image)
 
-        for i in range((len(self.displays) - 1) * 8):
+        for i in range((len(self.displays) - 1) * 8 + delta[1]):
             canvas.append(Image.new('1', (8, 8)))
 
         for i in range(len(canvas) - ((len(self.displays) - 1) * 8)):
             # Draw the image on the display buffer.
-            multi_image = [canvas[i], canvas[i + 8], canvas[i + 8 * 2], canvas[i + 8 * 3]]
+            # multi_image = [canvas[i], canvas[i + 8], canvas[i + 8 * 2], canvas[i + 8 * 3]]
+            multi_image = [canvas[i + canvas_index * 8] for canvas_index in range(len(self.displays))]
             for (index, display) in enumerate(self.displays):
                 display.set_image(multi_image[index].rotate(270))
                 # Draw the buffer to the display hardware.
@@ -152,10 +153,14 @@ class Clock(object):
                     self.multi_draw(self.displays[0].horizontal_scroll(image))
                     time.sleep(5.0)
 
-                    image = Image.new('1', (54, 8))
+                    image = Image.new('1', (len(weather[1]) * 6 + 2, 8))
                     draw = ImageDraw.Draw(image)
-                    draw.text((0, -1), weather[1], fill=255)
-                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.08)
+                    if now.month == 12 and 22 < now.day < 26 and now.hour >= 20:
+                        draw.text((0, -1), 'csendes éj', fill=255)
+                    else:
+                        draw.text((0, -1), weather[1], fill=255)
+
+                    self.multi_animate(self.displays[0].horizontal_scroll(image), 0.08, [10, -14])
 
                 if len(message) > 0:
                     image = Image.new('1', (len(message) * 6 + 2, 8))
@@ -165,23 +170,29 @@ class Clock(object):
 
                 minute_to_show = str(now.minute) if now.minute >= 10 else '0' + str(now.minute)
                 hour_to_show = str(now.hour) if now.hour >= 10 else '0' + str(now.hour)
+                """
                 self.second_blink = not self.second_blink
                 if self.second_blink:
                     second_divider = ' '
                 else:
                     second_divider = ':'
+                """
+                second_divider = ':'
 
                 time_to_show = hour_to_show + second_divider + minute_to_show
+
                 # TODO: multi_clear()
                 # self.multi_clear()
-                image = Image.new('1', (36, 8))
+                image = Image.new('1', (31, 8))
                 draw = ImageDraw.Draw(image)
                 draw.text((1, -1), time_to_show, fill=255)
-                self.multi_draw(self.displays[0].horizontal_scroll(image))
+                self.multi_animate(self.displays[0].horizontal_scroll(image), 0.08)
+                # self.multi_draw(self.displays[0].horizontal_scroll(image))
                 time.sleep(1)
+
                 # See the SSD1306 library for more examples of using the Python Imaging Library
                 # such as drawing text: https://github.com/adafruit/Adafruit_Python_SSD1306
-            except Exception:
+            except TypeError:
                 print('Error: Print failure. Re-initializing displays')
                 try:
                     for display in self.displays:
@@ -202,4 +213,9 @@ class Clock(object):
 
 
 CLOCK = Clock()
-CLOCK.start()
+while True:
+    try:
+        CLOCK.start()
+    except TypeError:
+        print('Failed to start. Retrying...')
+        time.sleep(60)
