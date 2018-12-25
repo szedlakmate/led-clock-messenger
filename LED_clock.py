@@ -54,7 +54,9 @@ def get_message(engine):
 
 class Clock(object):
     def __init__(self):
-        self.displays = [Matrix8x8.Matrix8x8(address=0x70), Matrix8x8.Matrix8x8(address=0x71)]
+        self.displays = [Matrix8x8.Matrix8x8(address=0x70),
+                         Matrix8x8.Matrix8x8(address=0x71),
+                         Matrix8x8.Matrix8x8(address=0x74)]
         self.second_blink = True
         self.prev_api_req_time = datetime.datetime.now() - datetime.timedelta(minutes=60)
         self.condition = weather_api_request([47.4794433, 19.2530735], 'c')
@@ -83,7 +85,7 @@ class Clock(object):
         return weather_show
 
     def set_auto_brightness(self):
-        if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 18):
+        if (datetime.datetime.now().hour > 7) and (datetime.datetime.now().hour < 17):
             BRIGHTNESS = 7
         else:
             BRIGHTNESS = 1
